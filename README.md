@@ -10,10 +10,10 @@ This repository contains a collection of systems programming exercises designed 
 | :--- | :--- | :--- | :--- |
 | [**Vector**](./vector) | Implementation of a dynamic array (vector) with resizing logic. | 🟢 **Easy** | 6/10 |
 | [**Linked List**](./linked_list) | Basic pointer manipulation and node management for linear structures. | 🟢 **Easy** | 6/10 |
-| [**Compiler (Easy)**](./compiler_easy) | Basic lexical analysis and simple expression parsing. | 🟢 **Easy** | 9/10 |
+| [**Compiler (Easy)**](./struct_compiler_easy) | Basic lexical analysis and simple expression parsing. | 🟢 **Easy** | 9/10 |
 | [**Backtrace**](./backtrace) | Manual x86_64 stack unwinding using frame pointers and debug symbols. | 🟡 **Medium** | 8/10 |
 | [**Slab Allocator**](./slab_allocator) | Efficient fixed-size object management with alignment and list transitions. | 🔴 **Hard** | 2/10 |
-| [**Compiler (Hard)**](./compiler_hard) | Advanced logic, potentially involving code generation or complex ASTs. | 🔴 **Hard** | 8/10 |
+| [**Compiler (Hard)**](./struct_compiler_hard) | Advanced logic, potentially involving code generation or complex ASTs. | 🔴 **Hard** | 8/10 |
 
 \* Exam Relevance does NOT refer to how likely the exercise is to appear on an exam, but rather how important the underlying concepts are for exam preparation.
 

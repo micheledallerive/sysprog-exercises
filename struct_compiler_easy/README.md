@@ -30,7 +30,7 @@ struct field {
 };
 ```
 
-Unlike the [advanced version](../compiler_hard/README.md), this exercise is **flat**. You do not need to handle nested structs, unions, or arrays.
+Unlike the [advanced version](../struct_compiler_hard/README.md), this exercise is **flat**. You do not need to handle nested structs, unions, or arrays.
 
 ## Testing Your Code
 
