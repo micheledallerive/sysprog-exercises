@@ -41,7 +41,7 @@ bool merkle_tree_verify(const merkle_tree_t *expected_tree, const void *data, si
 
 ## Testing Your Code
 
-The provided test suite includes over 30 test cases covering:
+The provided test suite includes 48 test cases covering:
 * Empty trees and single-byte inputs.
 * Trees with even and odd numbers of leaf blocks.
 * Integrity verification and tamper detection.
@@ -67,7 +67,7 @@ You should see:
 * Suite merkle_tree_suite:
 ..............................
 
-30 tests - 30 pass, 0 fail, 0 skipped
+48 tests - 48 pass, 0 fail, 0 skipped
 ```
 
 ---
