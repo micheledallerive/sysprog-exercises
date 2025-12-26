@@ -1,43 +1,75 @@
-# Stack Backtrace Unwinder
+# LEA Instruction Simulator
 
 ## Goal
 
-Implement a **stack backtrace unwinder** that manually traverses the call stack to identify the sequence of function calls. This exercise focuses on understanding the x86_64 stack frame layout and using debug information to map instruction addresses back to source code locations.
+Implement the address calculation logic for the x86_64 **LEA (Load Effective Address)** instruction. Unlike other instructions that access memory, LEA calculates the address and stores it in a destination. In this exercise, you will parse a string representation of an effective address and compute the resulting pointer using a simulated register set.
 
-Implement the `print_backtrace()` function in `lib.c` that takes a pointer to the current frame pointer (RBP), an array of debugging information, and the entry count. Your goal is to follow the chain of frame pointers to identify the chain of function calls, and print each function's source file and name along with the return address.
+Implement the `lea()` function in `lib.c`. Your function must parse the input string, look up the values in the provided `registers` struct, and calculate the final address using the formula:
 
-For example, if the stack contains a call chain where `main` called `funcA`, which then called `funcB`, the output should look like this:
-
-```text
-0x400300 file3.c:funcB
-0x400200 file2.c:funcA
-0x400100 file1.c:main
-```
-
-The format for each line must be: `<return_address> <file_name>:<function_name>`.
-
-Note that the stack that you will traverse is a simulated stack: you shouldn't go through the actual stack of the running program, but rather start from the given rbp and follow the x86_64 calling conventions to unwind the stack.
+$$Address = Base + (Index \times Scale) + Displacement$$
 
 ---
 
-## The Data Structure
+## Supported Address Formats
 
-The `debugging_info` struct maps memory address ranges to their respective source code metadata:
+Your parser must support a subset of x86_64 AT&T syntax. For this exercise, assume the input string contains **no spaces** and follows one of these four specific patterns:
 
+* **(B)**: Base register only.
+* **D(B)**: Displacement and Base register.
+* **(B,I,S)**: Base, Index, and Scale.
+* **D(B,I,S)**: Displacement, Base, Index, and Scale.
+
+**Constraints:**
+* **Registers (B, I)**: Must be one of the 16 standard 64-bit registers (e.g., `%rax`, `%rsp`, `%r12`).
+* **Displacement (D)**: An integer (positive or negative).
+* **Scale (S)**: Must be exactly **1**, **2**, **4**, or **8**.
+* **Whitespace**: The input string will not contain spaces.
+
+---
+
+## The Data Structures
+
+You are provided abstractions over registers and their values during execution:
 ```c
-struct debugging_info {
-  const char *file_name;
-  const char *function_name;
-  void *start_addr;
-  void *end_addr;
+
+enum reg : uint8_t {
+  REG_RAX = 0U,
+  REG_RCX,
+  REG_RDX,
+  REG_RBX,
+  REG_RSP,
+  REG_RBP,
+  REG_RSI,
+  REG_RDI,
+  REG_R8,
+  REG_R9,
+  REG_R10,
+  REG_R11,
+  REG_R12,
+  REG_R13,
+  REG_R14,
+  REG_R15,
+  REG_INVALID
+};
+
+struct registers {
+  uint64_t regs[REG_INVALID];
 };
 ```
+
+You must implement:
+
+```c
+bool lea(const char *effective_address, struct registers *regs, uintptr_t *out);
+```
+
+The function should return `true` if the address was successfully parsed and calculated, or `false` if the format is invalid.
 
 ---
 
 ## Testing Your Code
 
-Run the test suite:
+Build and run the test suite to verify your implementation:
 
 ```bash
 make
@@ -50,25 +82,16 @@ or
 make run
 ```
 
-The tests use the **Greatest** testing framework to simulate various stack configurations in memory and verify that your unwinder correctly identifies every caller in the chain.
-
-You should see:
-
-```text
-* Suite stack_traversal_suite:
-..........
-
-10 tests - 10 pass, 0 fail, 0 skipped
-```
+The tests will provide various string formats and verify that your calculation matches the expected architectural behavior of an x86_64 processor.
 
 ---
 
 ## Files You'll Modify
 
-* **`lib.c`**: Implement `print_backtrace()` and your address-to-symbol lookup logic.
+* **`lib.c`**: Implement the parsing and calculation logic for `lea()`.
 
 ## Files Provided
 
-* **`lib.h`**: Struct definitions and function prototypes.
-* **`test.c`**: Testing suite that mocks stack frames for verification.
+* **`lib.h`**: Register definitions and function prototypes.
+* **`test.c`**: Test cases for various address combinations.
 * **`Makefile`**: Build instructions.
