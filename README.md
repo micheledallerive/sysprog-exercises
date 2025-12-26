@@ -16,6 +16,7 @@ This repository contains a collection of systems programming exercises designed 
 | [**Backtrace**](./backtrace) | Manual x86_64 stack unwinding using frame pointers and debug symbols. | 🟡 **Medium** | 8/10 |
 | [**Slab Allocator**](./slab_allocator) | Efficient fixed-size memory management with slab allocator | 🔴 **Hard** | 2/10 |
 | [**Struct Compiler (Hard)**](./struct_compiler_hard) | Compile complex structs with nested types and alignment. | 🔴 **Hard** | 8/10 |
+| [**Merkle Tree**](./merkle_tree) | Construct and verify Merkle trees over arbitrary buffers. | 🔴 **Hard** | 5/10 |
 
 \* Exam Relevance does NOT refer to how likely the exercise is to appear on an exam, but rather how important the underlying concepts are for exam preparation.
 
