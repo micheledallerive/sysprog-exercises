@@ -41,7 +41,6 @@ mdr.c
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
-Makefile
 
 # Autotools
 autom4te.cache/
