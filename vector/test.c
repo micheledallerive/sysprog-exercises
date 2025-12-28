@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../greatest.h"
 #include "custom_tests.h"
-#include "greatest.h"
 #include "lib.h"
 
 TEST test_size_empty() {

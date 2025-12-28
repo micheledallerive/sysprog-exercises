@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../greatest.h"
 #include "custom_tests.h"
-#include "greatest.h"
 #include "lib.h"
 
 static job_t *create_job(job_id_t id, uint8_t priority) {

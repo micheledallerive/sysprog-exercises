@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "greatest.h"
+#include "../greatest.h"
+#include "custom_tests.h"
 #include "lib.h"
 
 #define ASSERT_STRUCT_MATCH(fields, type_name)                          \

@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../greatest.h"
 #include "custom_tests.h"
-#include "greatest.h"
 #include "lib.h"
 
 static int validate_schedule(size_t n, size_t m, const job_dependency_t *deps,
