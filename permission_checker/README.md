@@ -46,7 +46,7 @@ struct page_table {
 
 The function returns a `result_t` enum:
 * `SUCCESS`: Translation successful, `physical_address` is populated.
-* `PAGE_FAULT`: The Valid bit is 0 or the virtual address exceeds the architectural limit.
+* `PAGE_FAULT`: The Valid bit is 0.
 * `PERMISSION_DENIED`: The requested action (READ, WRITE, or EXECUTE) is not permitted by the PTE bits.
 
 ---

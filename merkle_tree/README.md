@@ -10,7 +10,7 @@ You must implement the library functions defined in `lib.h`, primarily the `merk
 
 ## The Problem
 
-A (Merkle Tree)[https://en.wikipedia.org/wiki/Merkle_tree] is a binary tree where every leaf node contains the hash of a data block, and every non-leaf node contains the cryptographic hash of its children's hashes.
+A [Merkle Tree](https://en.wikipedia.org/wiki/Merkle_tree) is a binary tree where every leaf node contains the hash of a data block, and every non-leaf node contains the cryptographic hash of its children's hashes.
 
 ### Data Structures
 
