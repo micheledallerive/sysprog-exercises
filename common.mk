@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -g -std=c11 -pedantic -Werror -fsanitize=address,undefined
+CFLAGS = -Wall -Wextra -g -std=c11 -pedantic -Werror -fsanitize=address,undefined -Wno-error=unused-parameter
 TARGET = test
 
 SRCS = lib.c test.c custom_tests.c
