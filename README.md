@@ -8,6 +8,7 @@ This repository contains a collection of systems programming exercises designed 
 
 | Exercise | Description | Difficulty | Relevant topics \* |
 | :--- | :--- | :--- | :--- |
+| [**Endianness Swapper**](./endianness_swapper) | Convert integers between Little and Big Endian formats. | 🟢 **Easy** | Bitwise operations, Memory layout |
 | [**fpclassify**](./fpclassify) | Classify floating-point numbers into categories (normal, subnormal, zero, infinite, NaN). | 🟢 **Easy** | Floating-point numbers, Bitwise operations |
 | [**Permission checker**](./permission_checker) | Validate permission of virtual memory accesses. | 🟢 **Easy** | MMU, Virtual memory, Bitwise operations |
 | [**Struct Compiler (Easy)**](./struct_compiler_easy) | Compute offset and size for simple structs. | 🟢 **Easy** | Memory layout |
