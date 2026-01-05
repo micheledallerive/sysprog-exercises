@@ -11,12 +11,10 @@
 
 struct hashmap {
   // Implement internal state
-  int empty;
 };
 
 struct hashmap_iterator {
   // Implement iterator state
-  int empty;
 };
 
 hashmap_t *hashmap_create(size_t num_buckets, size_t key_size,
