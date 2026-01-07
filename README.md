@@ -24,6 +24,7 @@ This repository contains a collection of systems programming exercises designed 
 | [**Struct Compiler (Hard)**](./struct_compiler_hard) | Compile complex structs with nested types and alignment. | 🔴 **Hard** | Memory layout, Implementation |
 | [**Slab Allocator**](./slab) | Efficient fixed-size memory management with slab allocator | 🔴 **Hard** | Memory management, Implementation |
 | [**Merkle Tree**](./merkle_tree) | Construct and verify Merkle trees over arbitrary buffers. | 🔴 **Hard** | Hashing, Implementation |
+| [**Firewall**](./firewall) | Network packet filtering based on different rules | 🟣 **Very Hard** | Networking, Data Structures, Implementation |
 
 \* Topic "Implementation" refers to exercise which heavily focus on building data structures or algorithms from scratch, rather than solely testing theoretical knowledge.
 
