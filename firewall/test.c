@@ -1292,6 +1292,239 @@ TEST test_ratelimit_self_loop() {
   PASS();
 }
 
+TEST test_combined_mac_drop_blacklist_pass() {
+  // Scenario: MAC rule says DROP. No Blacklist rule matches (default PASS).
+  // Result: DROP.
+  firewall_t *fw = firewall_create();
+
+  uint8_t bad_mac[6];
+  parse_mac("aa:aa:aa:aa:aa:aa", bad_mac);
+  firewall_add_mac_rule(fw, bad_mac, ACTION_DROP);
+
+  // Add an unrelated blacklist rule just to populate the list
+  firewall_add_blacklist_rule(fw, PROTOCOL_TCP, 0, 0, 9000, 9000);
+
+  uint8_t raw[RAW_BUFFER_SIZE];
+  uint8_t *pkt;
+  // Matches MAC rule. Port 80 does NOT match blacklist rule.
+  size_t len = build_packet(raw, &pkt, "aa:aa:aa:aa:aa:aa", "11:22:33:44:55:66",
+                            "1.1.1.1", "2.2.2.2", PROTOCOL_TCP, 100, 80, NULL);
+
+  ASSERT_EQ(ACTION_DROP, firewall_check(fw, pkt, len));
+  firewall_destroy(fw);
+  PASS();
+}
+
+TEST test_combined_mac_pass_blacklist_drop() {
+  // Scenario: MAC rule says PASS (whitelist). Blacklist rule says DROP.
+  // Result: DROP (Pass should not override Drop).
+  firewall_t *fw = firewall_create();
+
+  uint8_t good_mac[6];
+  parse_mac("aa:aa:aa:aa:aa:aa", good_mac);
+  firewall_add_mac_rule(fw, good_mac, ACTION_PASS);
+
+  // Blacklist drop on port 80
+  firewall_add_blacklist_rule(fw, PROTOCOL_TCP, 0, 0, 80, 80);
+
+  uint8_t raw[RAW_BUFFER_SIZE];
+  uint8_t *pkt;
+  size_t len = build_packet(raw, &pkt, "aa:aa:aa:aa:aa:aa", "11:22:33:44:55:66",
+                            "1.1.1.1", "2.2.2.2", PROTOCOL_TCP, 100, 80, NULL);
+
+  ASSERT_EQ(ACTION_DROP, firewall_check(fw, pkt, len));
+  firewall_destroy(fw);
+  PASS();
+}
+
+TEST test_combined_blacklist_drop_content_pass() {
+  // Scenario: Blacklist matches (DROP). Content does not match (PASS).
+  // Result: DROP.
+  firewall_t *fw = firewall_create();
+
+  // Drop port 80
+  firewall_add_blacklist_rule(fw, PROTOCOL_TCP, 0, 0, 80, 80);
+
+  // Content rule exists for "virus", but packet has "clean"
+  firewall_add_content_rule(fw, "virus", 5);
+
+  uint8_t raw[RAW_BUFFER_SIZE];
+  uint8_t *pkt;
+  size_t len =
+      build_packet(raw, &pkt, "00:00:00:00:00:00", "00:00:00:00:00:00",
+                   "1.1.1.1", "2.2.2.2", PROTOCOL_TCP, 100, 80, "clean");
+
+  ASSERT_EQ(ACTION_DROP, firewall_check(fw, pkt, len));
+  firewall_destroy(fw);
+  PASS();
+}
+
+TEST test_combined_blacklist_pass_content_drop() {
+  // Scenario: Blacklist allows (Port 8080). Content matches "virus" (DROP).
+  // Result: DROP.
+  firewall_t *fw = firewall_create();
+
+  // Drop port 80 (Packet is 8080, so Blacklist passes)
+  firewall_add_blacklist_rule(fw, PROTOCOL_TCP, 0, 0, 80, 80);
+
+  firewall_add_content_rule(fw, "virus", 5);
+
+  uint8_t raw[RAW_BUFFER_SIZE];
+  uint8_t *pkt;
+  size_t len =
+      build_packet(raw, &pkt, "00:00:00:00:00:00", "00:00:00:00:00:00",
+                   "1.1.1.1", "2.2.2.2", PROTOCOL_TCP, 100, 8080, "virus");
+
+  ASSERT_EQ(ACTION_DROP, firewall_check(fw, pkt, len));
+  firewall_destroy(fw);
+  PASS();
+}
+
+TEST test_combined_content_pass_ratelimit_drop() {
+  // Scenario: Content is safe. Rate limit exceeded.
+  // Result: DROP.
+  firewall_t *fw = firewall_create();
+
+  firewall_add_content_rule(fw, "virus", 5);
+  // Low rate limit
+  firewall_configure_ratelimit(fw, 10, 1000000);
+
+  uint8_t raw[RAW_BUFFER_SIZE];
+  uint8_t *pkt;
+  // Payload "safe" (4 bytes).
+  // Packet 1: 4 bytes (Pass). Packet 2: 8 bytes (Pass). Packet 3: 12 bytes > 10
+  // (Drop).
+  size_t len =
+      build_packet(raw, &pkt, "00:00:00:00:00:00", "00:00:00:00:00:00",
+                   "1.1.1.1", "2.2.2.2", PROTOCOL_TCP, 100, 80, "safe");
+
+  ASSERT_EQ(ACTION_PASS, firewall_check(fw, pkt, len));
+  ASSERT_EQ(ACTION_PASS, firewall_check(fw, pkt, len));
+  ASSERT_EQ(ACTION_DROP, firewall_check(fw, pkt, len));
+
+  firewall_destroy(fw);
+  PASS();
+}
+
+TEST test_combined_content_drop_ratelimit_pass() {
+  // Scenario: Content matches "virus" (DROP). Rate limit is fine.
+  // Result: DROP.
+  firewall_t *fw = firewall_create();
+
+  firewall_add_content_rule(fw, "virus", 5);
+  // High rate limit
+  firewall_configure_ratelimit(fw, 1000, 1000000);
+
+  uint8_t raw[RAW_BUFFER_SIZE];
+  uint8_t *pkt;
+  size_t len =
+      build_packet(raw, &pkt, "00:00:00:00:00:00", "00:00:00:00:00:00",
+                   "1.1.1.1", "2.2.2.2", PROTOCOL_TCP, 100, 80, "virus");
+
+  // Even though bucket is empty, content triggers drop.
+  ASSERT_EQ(ACTION_DROP, firewall_check(fw, pkt, len));
+
+  firewall_destroy(fw);
+  PASS();
+}
+
+TEST test_combined_ratelimit_drop_mac_pass() {
+  // Scenario: Rate limit exceeded (DROP). MAC explicitly allowed (PASS).
+  // Result: DROP.
+  firewall_t *fw = firewall_create();
+
+  uint8_t good_mac[6];
+  parse_mac("aa:aa:aa:aa:aa:aa", good_mac);
+  firewall_add_mac_rule(fw, good_mac, ACTION_PASS);
+
+  firewall_configure_ratelimit(fw, 10, 1000000);
+
+  uint8_t raw[RAW_BUFFER_SIZE];
+  uint8_t *pkt;
+  // Payload "load" (4 bytes).
+  // Packet 3 will exceed rate 10.
+  size_t len =
+      build_packet(raw, &pkt, "aa:aa:aa:aa:aa:aa", "11:22:33:44:55:66",
+                   "1.1.1.1", "2.2.2.2", PROTOCOL_TCP, 100, 80, "load");
+
+  ASSERT_EQ(ACTION_PASS, firewall_check(fw, pkt, len));
+  ASSERT_EQ(ACTION_PASS, firewall_check(fw, pkt, len));
+  ASSERT_EQ(ACTION_DROP, firewall_check(fw, pkt, len));
+
+  firewall_destroy(fw);
+  PASS();
+}
+
+TEST test_combined_all_drop() {
+  // Scenario: MAC, Blacklist, and Content ALL match and say DROP.
+  // Result: DROP.
+  firewall_t *fw = firewall_create();
+
+  uint8_t bad_mac[6];
+  parse_mac("aa:aa:aa:aa:aa:aa", bad_mac);
+  firewall_add_mac_rule(fw, bad_mac, ACTION_DROP);
+
+  firewall_add_blacklist_rule(fw, PROTOCOL_TCP, 0, 0, 80, 80);
+
+  firewall_add_content_rule(fw, "bad", 3);
+
+  uint8_t raw[RAW_BUFFER_SIZE];
+  uint8_t *pkt;
+  size_t len = build_packet(raw, &pkt, "aa:aa:aa:aa:aa:aa", "11:22:33:44:55:66",
+                            "1.1.1.1", "2.2.2.2", PROTOCOL_TCP, 100, 80, "bad");
+
+  ASSERT_EQ(ACTION_DROP, firewall_check(fw, pkt, len));
+  firewall_destroy(fw);
+  PASS();
+}
+
+TEST test_combined_all_pass() {
+  // Scenario: Rules exist for MAC, Blacklist, Content, Rate. Packet evades all
+  // of them. Result: PASS.
+  firewall_t *fw = firewall_create();
+
+  uint8_t bad_mac[6];
+  parse_mac("ff:ff:ff:ff:ff:ff", bad_mac);
+  firewall_add_mac_rule(fw, bad_mac, ACTION_DROP);
+
+  firewall_add_blacklist_rule(fw, PROTOCOL_TCP, 0, 0, 9000, 9000);
+  firewall_add_content_rule(fw, "virus", 5);
+  firewall_configure_ratelimit(fw, 1000, 1000000);
+
+  uint8_t raw[RAW_BUFFER_SIZE];
+  uint8_t *pkt;
+  // Clean MAC, Port 80, Content "clean", Size 5 bytes.
+  size_t len =
+      build_packet(raw, &pkt, "aa:aa:aa:aa:aa:aa", "11:22:33:44:55:66",
+                   "1.1.1.1", "2.2.2.2", PROTOCOL_TCP, 100, 80, "clean");
+
+  ASSERT_EQ(ACTION_PASS, firewall_check(fw, pkt, len));
+  firewall_destroy(fw);
+  PASS();
+}
+
+TEST test_combined_protocol_mismatch_content_drop() {
+  // Scenario: Blacklist rule is for UDP (so TCP passes it).
+  // But content rule matches (Applies to both TCP/UDP).
+  // Result: DROP.
+  firewall_t *fw = firewall_create();
+
+  // Blacklist UDP port 80. Packet is TCP port 80.
+  firewall_add_blacklist_rule(fw, PROTOCOL_UDP, 0, 0, 80, 80);
+
+  firewall_add_content_rule(fw, "fail", 4);
+
+  uint8_t raw[RAW_BUFFER_SIZE];
+  uint8_t *pkt;
+  size_t len =
+      build_packet(raw, &pkt, "00:00:00:00:00:00", "00:00:00:00:00:00",
+                   "1.1.1.1", "2.2.2.2", PROTOCOL_TCP, 100, 80, "fail");
+
+  ASSERT_EQ(ACTION_DROP, firewall_check(fw, pkt, len));
+  firewall_destroy(fw);
+  PASS();
+}
+
 // ==========================================
 //                TEST RUNNER
 // ==========================================
@@ -1363,6 +1596,19 @@ SUITE(suite_ratelimit) {
   RUN_TEST(test_ratelimit_self_loop);
 }
 
+SUITE(suite_combined) {
+  RUN_TEST(test_combined_mac_drop_blacklist_pass);
+  RUN_TEST(test_combined_mac_pass_blacklist_drop);
+  RUN_TEST(test_combined_blacklist_drop_content_pass);
+  RUN_TEST(test_combined_blacklist_pass_content_drop);
+  RUN_TEST(test_combined_content_pass_ratelimit_drop);
+  RUN_TEST(test_combined_content_drop_ratelimit_pass);
+  RUN_TEST(test_combined_ratelimit_drop_mac_pass);
+  RUN_TEST(test_combined_all_drop);
+  RUN_TEST(test_combined_all_pass);
+  RUN_TEST(test_combined_protocol_mismatch_content_drop);
+}
+
 GREATEST_MAIN_DEFS();
 
 int main(int argc, char **argv) {
@@ -1372,6 +1618,7 @@ int main(int argc, char **argv) {
   RUN_SUITE(suite_blacklist);
   RUN_SUITE(suite_content);
   RUN_SUITE(suite_ratelimit);
+  RUN_SUITE(suite_combined);
   GREATEST_PRINT_REPORT();
   custom_tests();
   return greatest_all_passed() ? EXIT_SUCCESS : EXIT_FAILURE;
