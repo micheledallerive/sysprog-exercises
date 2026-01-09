@@ -13,6 +13,7 @@ This repository contains a collection of systems programming exercises designed 
 | [**Permission checker**](./permission_checker) | Validate permission of virtual memory accesses. | 🟢 **Easy** | MMU, Virtual memory, Bitwise operations |
 | [**Struct Compiler (Easy)**](./struct_compiler_easy) | Compute offset and size for simple structs. | 🟢 **Easy** | Memory layout |
 | [**Static Stack**](./staticstack) | Implement a generic fixed-capacity stack data structure. | 🟢 **Easy** | Memory management, Implementation |
+| [**LEB128**](./leb128) | Compress and decompress integers using LEB128 encoding. | 🟢 **Easy** | Bitwise operations, Compression |
 | [**LEA**](./lea) | Simulate the LEA x86 instruction. | 🟢 **Easy** | x86 assembly |
 | [**Vector**](./vector) | Implementation of a dynamic array (vector) with resizing logic. | 🟡 **Medium** | Memory management, Implementation |
 | [**Linked List**](./linked_list) | Basic pointer manipulation and node management for linear structures. | 🟡 **Medium** | Pointers, Implementation |
